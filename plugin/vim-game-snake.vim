@@ -37,7 +37,7 @@ let s:move = {
 function! s:main()
 
     call s:init()
-    call s:newFood()
+    let l:food = s:newFood()
 
     let l:loop = 1
     while l:loop == 1
@@ -45,15 +45,14 @@ function! s:main()
         let l:input = nr2char(getchar(0))
 
         call s:updateDirection(l:input)
-        call s:updateSnake()
+        let l:food = s:updateSnake(l:food)
+        call s:moveSnake(l:food)
 
         let l:isGameOver = s:checkGameOver(s:snake)
 
         if l:input == 'c' || l:isGameOver == 1
             break
         endif
-
-        call s:moveSnake()
 
         sleep 100ms
         redraw
@@ -67,10 +66,10 @@ function! s:checkGameOver(snake)
     let l:head = a:snake[0]
     for body in a:snake[1:]
         if body['x'] == l:head['x'] && body['y'] == l:head['y']
-                    \ || body['x'] <= s:config['limitLeft']
-                    \ || body['x'] >= s:config['limitRight']
-                    \ || body['y'] <= s:config['limitTop']
-                    \ || body['y'] >= s:config['limitBottom']
+                    \ || body['x'] < s:config['limitLeft']
+                    \ || body['x'] > s:config['limitRight']
+                    \ || body['y'] < s:config['limitTop']
+                    \ || body['y'] > s:config['limitBottom']
             return 1
         endif
     endfor
@@ -90,9 +89,20 @@ function! s:init()
 endfunction
 
 function! s:newFood()
-    let l:randomX = s:rand(s:config['innerWidth'])
-    let l:randomY = s:rand(s:config['innerHeight'])
+    let l:randomX = s:rand(s:config['innerWidth']) + s:config['border'] + 1
+    let l:randomY = s:rand(s:config['innerHeight']) + s:config['border'] + 1
+
+    for body in s:snake
+        if body['x'] == l:randomX && body['y'] == l:randomY
+            let l:f = s:snake[-1]
+            let l:randomX = l:f['x']
+            let l:randomY = l:f['y']
+            break
+        endif
+    endfor
+
     call s:drawChar(l:randomX, l:randomY, 'F')
+    return { 'x': l:randomX, 'y': l:randomY }
 endfunction
 
 function! s:rand(div)
@@ -114,11 +124,12 @@ function! s:updateDirection(input)
 endfunction
 
 "
-function! s:moveSnake()
+function! s:moveSnake(food)
     let l:head = s:snake[0]
     let l:tail = s:snake[-1]
     call s:drawChar(l:head['x'], l:head['y'], s:item['body'])
     call s:drawChar(l:tail['x'], l:tail['y'], s:item['empty'])
+    call s:drawChar(a:food['x'], a:food['y'], s:item['food'])
 endfunction
 
 function! s:drawChar(x, y, char)
@@ -126,18 +137,25 @@ function! s:drawChar(x, y, char)
 endfunction
 
 "
-function! s:updateSnake()
+function! s:updateSnake(food)
     let l:dx = s:direction['x']
     let l:dy = s:direction['y']
     let l:head = s:snake[0]
     let l:newHead = { 'x': l:head['x'] + l:dx, 'y': l:head['y'] + l:dy }
     let s:snake = [ l:newHead ] + s:snake[0:-2]
+
+    if l:newHead['x'] == a:food['x'] && l:newHead['y'] == a:food['y']
+        let s:snake = s:snake + [s:snake[-1]]
+        return s:newFood()
+    endif
+
+    return a:food
 endfunction
 
 "
 function! s:setSnake(x, y)
     let s:snake = [ { 'x': a:x, 'y': a:y }, { 'x': a:x, 'y': a:y } ]
-    let s:snake = s:snake + s:snake
+    let s:snake = s:snake + s:snake + s:snake
 endfunction
 
 "
@@ -169,10 +187,10 @@ function! s:setConfig()
     let s:config['height'] = l:height
     let s:config['innerWidth'] = l:width - (l:border * 2)
     let s:config['innerHeight'] = l:height - (l:border * 2)
-    let s:config['limitTop'] = l:border + 1
+    let s:config['limitTop'] = l:border
     let s:config['limitBottom'] = l:height - l:border
     let s:config['limitLeft'] = l:border
-    let s:config['limitRight'] = l:width - l:border - 1
+    let s:config['limitRight'] = l:width - l:border
 endfunction
 
 "
