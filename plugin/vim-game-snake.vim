@@ -6,10 +6,18 @@ nnoremap <F9><F9> :so %<CR>:Snake<CR>
 let s:config = {
             \ 'width': 0,
             \ 'height': 0,
+            \ 'border': 1,
+            \ 'innerWidth': 0,
+            \ 'innerHeight': 0,
             \ }
 
+let s:seed = localtime()
+
 let s:item = {
-            \ 'wall': 'W'
+            \ 'wall': 'W',
+            \ 'body': 'B',
+            \ 'food': 'F',
+            \ 'empty': ' ',
             \ }
 
 let s:snake = [ { 'x' : 1 , 'y' : 1 } ]
@@ -25,6 +33,21 @@ let s:move = {
 function! s:main()
 
     call s:init()
+    call s:newFood()
+
+    let l:loop = 1
+    while l:loop == 1
+
+        let l:input = nr2char(getchar(0))
+        let l:loop = s:updateDirection(l:input)
+        call s:updateSnake()
+        call s:moveSnake()
+
+
+        sleep 100ms
+        redraw
+
+    endwhile
 
 endfunction
 
@@ -38,19 +61,17 @@ function! s:init()
     call s:drawScreen(s:config, s:item)
     call s:setSnake(s:config['width']/2, s:config['height']/2)
 
-    let l:loop = 1
-    while l:loop == 1
+endfunction
 
-        let l:input = nr2char(getchar(0))
-        let l:loop = s:updateDirection(l:input)
-        call s:updateSnake()
-        call s:moveSnake()
+function! s:newFood()
+    let l:randomX = s:rand(s:config['innerWidth'])
+    let l:randomY = s:rand(s:config['innerHeight'])
+    call s:drawChar(l:randomX, l:randomY, 'F')
+endfunction
 
-        sleep 100ms
-        redraw
-
-    endwhile
-
+function! s:rand(div)
+    let s:num = system('echo $RANDOM')[0:-2]
+    return s:num % a:div
 endfunction
 
 "
@@ -76,8 +97,12 @@ endfunction
 function! s:moveSnake()
     let l:head = s:snake[0]
     let l:tail = s:snake[-1]
-    execute "normal! " . l:head['y'] . 'gg0' . l:head['x'] . 'lrB'
-    execute "normal! " . l:tail['y'] . 'gg0' . l:tail['x'] . 'lr '
+    call s:drawChar(l:head['x'], l:head['y'], s:item['body'])
+    call s:drawChar(l:tail['x'], l:tail['y'], s:item['empty'])
+endfunction
+
+function! s:drawChar(x, y, char)
+    execute "normal! " . a:y . 'gg0' . a:x . 'lr' . a:char . 'gg0'
 endfunction
 
 "
@@ -91,7 +116,8 @@ endfunction
 
 "
 function! s:setSnake(x, y)
-    let s:snake = [ { 'x': a:x, 'y': a:y }]
+    let s:snake = [ { 'x': a:x, 'y': a:y }, { 'x': a:x, 'y': a:y } ]
+    let s:snake = s:snake + s:snake
 endfunction
 
 "
@@ -117,8 +143,11 @@ endfunction
 "
 function! s:setConfig()
     echomsg winwidth(0)
+    let l:border = s:config['border']
     let s:config['width'] = winwidth(0)
     let s:config['height'] = winheight(0)
+    let s:config['innerWidth'] = winwidth(0) - (l:border * 2)
+    let s:config['innerHeight'] = winheight(0) - (l:border * 2)
 endfunction
 
 "
@@ -127,15 +156,15 @@ function! s:drawScreen(config, item)
     let l:height = a:config['height']
     let l:wall = a:item['wall']
 
-    let l:border = 1
-    let l:innerHeight = l:height - (l:border * 2)
-    let l:innerWidth = l:width - (l:border * 2)
+    let l:border = a:config['border']
+    let l:innerHeight = a:config['innerHeight']
+    let l:innerWidth = a:config['innerWidth']
 
     " draw full screen
     let lines = repeat([repeat(l:wall, l:width)], l:height)
 
     " draw game board
-    for row in range(1,l:height-2)
+    for row in range(1,l:innerHeight)
         let lines[row] = repeat(l:wall, l:border)
                     \ .repeat(' ', l:innerWidth)
                     \ .repeat(l:wall, l:border)
@@ -149,5 +178,9 @@ endfunction
 "
 function! s:setColor()
     syntax match wall 'W'
+    syntax match snakeBody 'B'
+    syntax match snakeFood 'F'
     highlight wall ctermfg=blue ctermbg=blue guifg=blue guibg=blue
+    highlight snakeBody ctermfg=green ctermbg=green guifg=green guibg=green
+    highlight snakeFood ctermfg=red ctermbg=red guifg=red guibg=red
 endfunction
