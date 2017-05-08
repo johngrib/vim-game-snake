@@ -9,6 +9,10 @@ let s:config = {
             \ 'border': 1,
             \ 'innerWidth': 0,
             \ 'innerHeight': 0,
+            \ 'limitTop': 0,
+            \ 'limitBottom': 0,
+            \ 'limitLeft': 0,
+            \ 'limitRight': 0,
             \ }
 
 let s:seed = localtime()
@@ -39,16 +43,38 @@ function! s:main()
     while l:loop == 1
 
         let l:input = nr2char(getchar(0))
-        let l:loop = s:updateDirection(l:input)
-        call s:updateSnake()
-        call s:moveSnake()
 
+        call s:updateDirection(l:input)
+        call s:updateSnake()
+
+        let l:isGameOver = s:checkGameOver(s:snake)
+
+        if l:input == 'c' || l:isGameOver == 1
+            break
+        endif
+
+        call s:moveSnake()
 
         sleep 100ms
         redraw
 
     endwhile
 
+endfunction
+
+"
+function! s:checkGameOver(snake)
+    let l:head = a:snake[0]
+    for body in a:snake[1:]
+        if body['x'] == l:head['x'] && body['y'] == l:head['y']
+                    \ || body['x'] <= s:config['limitLeft']
+                    \ || body['x'] >= s:config['limitRight']
+                    \ || body['y'] <= s:config['limitTop']
+                    \ || body['y'] >= s:config['limitBottom']
+            return 1
+        endif
+    endfor
+    return 0
 endfunction
 
 " game initialize
@@ -76,10 +102,6 @@ endfunction
 
 "
 function! s:updateDirection(input)
-    if a:input == 'c'
-        return 0
-    endif
-
     if a:input == 'h'
         let s:direction = s:move['left']
     elseif a:input == 'j'
@@ -89,8 +111,6 @@ function! s:updateDirection(input)
     elseif a:input == 'l'
         let s:direction = s:move['right']
     endif
-
-    return 1
 endfunction
 
 "
@@ -142,12 +162,17 @@ endfunction
 
 "
 function! s:setConfig()
-    echomsg winwidth(0)
+    let l:width = winwidth(0)
+    let l:height = winheight(0)
     let l:border = s:config['border']
-    let s:config['width'] = winwidth(0)
-    let s:config['height'] = winheight(0)
-    let s:config['innerWidth'] = winwidth(0) - (l:border * 2)
-    let s:config['innerHeight'] = winheight(0) - (l:border * 2)
+    let s:config['width'] = l:width
+    let s:config['height'] = l:height
+    let s:config['innerWidth'] = l:width - (l:border * 2)
+    let s:config['innerHeight'] = l:height - (l:border * 2)
+    let s:config['limitTop'] = l:border + 1
+    let s:config['limitBottom'] = l:height - l:border
+    let s:config['limitLeft'] = l:border
+    let s:config['limitRight'] = l:width - l:border - 1
 endfunction
 
 "
@@ -178,6 +203,7 @@ endfunction
 "
 function! s:setColor()
     syntax match wall 'W'
+    syntax match snakeHEAD 'H'
     syntax match snakeBody 'B'
     syntax match snakeFood 'F'
     highlight wall ctermfg=blue ctermbg=blue guifg=blue guibg=blue
