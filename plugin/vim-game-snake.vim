@@ -12,6 +12,16 @@ let s:item = {
             \ 'wall': 'W'
             \ }
 
+let s:snake = [ { 'x' : 1 , 'y' : 1 } ]
+let s:direction = { 'x': 1, 'y': 0 }
+
+let s:move = {
+            \ 'left'  : { 'x' : -1 , 'y' : 0 },
+            \ 'down'  : { 'x' : 0  , 'y' : 1 },
+            \ 'up'    : { 'x' : 0  , 'y' : -1 },
+            \ 'right' : { 'x' : 1  , 'y' : 0 },
+            \ }
+
 function! s:main()
 
     call s:init()
@@ -26,7 +36,62 @@ function! s:init()
     call s:setConfig()
     call s:setColor()
     call s:drawScreen(s:config, s:item)
+    call s:setSnake(s:config['width']/2, s:config['height']/2)
 
+    let l:loop = 1
+    while l:loop == 1
+
+        let l:input = nr2char(getchar(0))
+        let l:loop = s:updateDirection(l:input)
+        call s:updateSnake()
+        call s:moveSnake()
+
+        sleep 100ms
+        redraw
+
+    endwhile
+
+endfunction
+
+"
+function! s:updateDirection(input)
+    if a:input == 'c'
+        return 0
+    endif
+
+    if a:input == 'h'
+        let s:direction = s:move['left']
+    elseif a:input == 'j'
+        let s:direction = s:move['down']
+    elseif a:input == 'k'
+        let s:direction = s:move['up']
+    elseif a:input == 'l'
+        let s:direction = s:move['right']
+    endif
+
+    return 1
+endfunction
+
+"
+function! s:moveSnake()
+    let l:head = s:snake[0]
+    let l:tail = s:snake[-1]
+    execute "normal! " . l:head['y'] . 'gg0' . l:head['x'] . 'lrB'
+    execute "normal! " . l:tail['y'] . 'gg0' . l:tail['x'] . 'lr '
+endfunction
+
+"
+function! s:updateSnake()
+    let l:dx = s:direction['x']
+    let l:dy = s:direction['y']
+    let l:head = s:snake[0]
+    let l:newHead = { 'x': l:head['x'] + l:dx, 'y': l:head['y'] + l:dy }
+    let s:snake = [ l:newHead ] + s:snake[0:-2]
+endfunction
+
+"
+function! s:setSnake(x, y)
+    let s:snake = [ { 'x': a:x, 'y': a:y }]
 endfunction
 
 "
