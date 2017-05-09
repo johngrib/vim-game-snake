@@ -1,7 +1,5 @@
 
-command! Snake :call s:main()
-
-nnoremap <F9><F9> :so %<CR>:Snake<CR>
+command! VimGameSnake :call s:main()
 
 let s:config = {
             \ 'width': 0,
