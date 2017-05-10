@@ -53,6 +53,11 @@ function! s:main()
 
         call s:moveSnake(l:food)
 
+        if l:input == 'q'
+            let l:loop = 0
+            bdelete!
+        endif
+
         sleep 100ms
         redraw
 
