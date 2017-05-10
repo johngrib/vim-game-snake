@@ -44,13 +44,14 @@ function! s:main()
 
         call s:updateDirection(l:input)
         let l:food = s:updateSnake(l:food)
-        call s:moveSnake(l:food)
 
         let l:isGameOver = s:checkGameOver(s:snake)
 
         if l:input == 'c' || l:isGameOver == 1
             break
         endif
+
+        call s:moveSnake(l:food)
 
         sleep 100ms
         redraw
@@ -62,17 +63,25 @@ endfunction
 "
 function! s:checkGameOver(snake)
     let l:head = a:snake[0]
-    for body in a:snake[1:]
-        if body['x'] == l:head['x'] && body['y'] == l:head['y']
-                    \ || body['x'] < s:config['limitLeft']
-                    \ || body['x'] > s:config['limitRight']
-                    \ || body['y'] < s:config['limitTop']
-                    \ || body['y'] > s:config['limitBottom']
-            return 1
-        endif
-    endfor
+
+    if s:isWall(l:head['x'], l:head['y'])
+                \ || s:isSnakeBody(l:head['x'], l:head['y'])
+        return 1
+    endif
+
     return 0
 endfunction
+
+"
+function! s:isWall(x, y)
+    return s:getCharValue(a:x, a:y) == s:item['wall']
+endfunction
+
+"
+function! s:isSnakeBody(x, y)
+    return s:getCharValue(a:x, a:y) == s:item['body']
+endfunction
+
 
 " game initialize
 function! s:init()
@@ -226,3 +235,9 @@ function! s:setColor()
     highlight snakeBody ctermfg=green ctermbg=green guifg=green guibg=green
     highlight snakeFood ctermfg=red ctermbg=red guifg=red guibg=red
 endfunction
+
+"
+function! s:getCharValue(x, y)
+    return getline(a:y)[a:x]
+endfunction
+
