@@ -125,13 +125,21 @@ endfunction
 "
 function! s:updateDirection(input)
     if a:input == 'h'
-        let s:direction = s:move['left']
+        if s:direction != s:move['right']
+            let s:direction = s:move['left']
+        endif
     elseif a:input == 'j'
-        let s:direction = s:move['down']
+        if s:direction != s:move['up']
+            let s:direction = s:move['down']
+        endif
     elseif a:input == 'k'
-        let s:direction = s:move['up']
+        if s:direction != s:move['down']
+            let s:direction = s:move['up']
+        endif
     elseif a:input == 'l'
-        let s:direction = s:move['right']
+        if s:direction != s:move['left']
+            let s:direction = s:move['right']
+        endif
     endif
 endfunction
 
