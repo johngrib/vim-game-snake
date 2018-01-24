@@ -101,7 +101,7 @@ function! s:init()
 endfunction
 
 function! s:newFood()
-    let l:randomX = s:rand(s:config['innerWidth']) + s:config['border'] + 1
+    let l:randomX = s:rand(s:config['innerWidth']) + s:config['border']
     let l:randomY = s:rand(s:config['innerHeight']) + s:config['border'] + 1
 
     for body in s:snake
