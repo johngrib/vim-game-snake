@@ -1,5 +1,6 @@
-
 command! VimGameSnake :call s:main()
+
+let g:VimSnakeScore = 0
 
 let s:config = {
             \ 'width': 0,
@@ -65,7 +66,6 @@ function! s:main()
 
 endfunction
 
-"
 function! s:checkGameOver(snake)
     let l:head = a:snake[0]
 
@@ -77,18 +77,16 @@ function! s:checkGameOver(snake)
     return 0
 endfunction
 
-"
 function! s:isWall(x, y)
     return s:getCharValue(a:x, a:y) == s:item['wall']
 endfunction
 
-"
 function! s:isSnakeBody(x, y)
     return s:getCharValue(a:x, a:y) == s:item['body']
 endfunction
 
 
-" game initialize
+" Game initialize
 function! s:init()
 
     call s:createBuffer()
@@ -103,6 +101,7 @@ endfunction
 function! s:newFood()
     let l:randomX = s:rand(s:config['innerWidth']) + s:config['border']
     let l:randomY = s:rand(s:config['innerHeight']) + s:config['border'] + 1
+	let g:VimSnakeScore += 1
 
     for body in s:snake
         if body['x'] == l:randomX && body['y'] == l:randomY
@@ -122,7 +121,6 @@ function! s:rand(div)
     return s:num % a:div
 endfunction
 
-"
 function! s:updateDirection(input)
     if a:input == 'h'
         if s:direction != s:move['right']
@@ -143,7 +141,6 @@ function! s:updateDirection(input)
     endif
 endfunction
 
-"
 function! s:moveSnake(food)
     let l:head = s:snake[0]
     let l:tail = s:snake[-1]
@@ -156,7 +153,6 @@ function! s:drawChar(x, y, char)
     execute "normal! " . a:y . 'gg0' . a:x . 'lr' . a:char . 'gg0'
 endfunction
 
-"
 function! s:updateSnake(food)
     let l:dx = s:direction['x']
     let l:dy = s:direction['y']
@@ -172,18 +168,15 @@ function! s:updateSnake(food)
     return a:food
 endfunction
 
-"
 function! s:setSnake(x, y)
     let s:snake = [ { 'x': a:x, 'y': a:y }, { 'x': a:x, 'y': a:y } ]
     let s:snake = s:snake + s:snake + s:snake
 endfunction
 
-"
 function! s:createBuffer()
     silent edit `='VIM-GAME-SNAKE'`
 endfunction
 
-"
 function! s:setLocalSetting()
     setlocal bufhidden=wipe
     setlocal buftype=nofile
@@ -198,7 +191,6 @@ function! s:setLocalSetting()
     setlocal norelativenumber
 endfunction
 
-"
 function! s:setConfig()
     let l:width = winwidth(0)
     let l:height = winheight(0)
@@ -213,7 +205,6 @@ function! s:setConfig()
     let s:config['limitRight'] = l:width - l:border
 endfunction
 
-"
 function! s:drawScreen(config, item)
     let l:width = a:config['width']
     let l:height = a:config['height']
@@ -223,7 +214,7 @@ function! s:drawScreen(config, item)
     let l:innerHeight = a:config['innerHeight']
     let l:innerWidth = a:config['innerWidth']
 
-    " draw full screen
+    " Draw full screen
     let lines = repeat([repeat(l:wall, l:width)], l:height)
 
     " draw game board
@@ -233,12 +224,11 @@ function! s:drawScreen(config, item)
                     \ .repeat(l:wall, l:border)
     endfor
 
-    " draw on buffer
+    " Draw on buffer
     call setline(1, lines)
     redraw
 endfunction
 
-"
 function! s:setColor()
     syntax match wall 'W'
     syntax match snakeHEAD 'H'
@@ -249,7 +239,6 @@ function! s:setColor()
     highlight snakeFood ctermfg=red ctermbg=red guifg=red guibg=red
 endfunction
 
-"
 function! s:getCharValue(x, y)
     return getline(a:y)[a:x]
 endfunction
