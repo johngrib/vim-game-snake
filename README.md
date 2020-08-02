@@ -7,6 +7,7 @@ version 0.1
 ## How to play
 
 `:VimGameSnake` to Start
+`:echo g:VimSnakeScore` to view score
 
 h   | j   | k   | l   | c        | q
 --- | --- | --- | --- | ---      | ---
